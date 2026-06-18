@@ -1,0 +1,75 @@
+---
+import BuilderioPage from "../../components/BuilderioPage";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const builderModel = import.meta.env.BUILDER_PAGE_MODEL;
+  const builderAPIpublicKey = import.meta.env.BUILDER_API_PUBLIC_KEY;
+
+  const builderioToUrlLanguageMapping: Record<string, string> = {
+    "en-US": "en",
+    "es-ES": "es",
+    "ja-JP": "ja",
+  };
+
+  const contentFetchUrl = `https://cdn.builder.io/api/v3/content/${builderModel}?${new URLSearchParams(
+    {
+      apiKey: builderAPIpublicKey,
+      fields: ["id", "data.slug", "data.title"].join(","),
+      cachebust: "true",
+    },
+  ).toString()}`;
+
+  const { results: pages } = await fetch(contentFetchUrl)
+    .then((res) => res.json())
+    .catch((error) => {
+      console.error("Error fetching pages from Builder.io:", error);
+      return { results: [] };
+    });
+
+  const paths = pages.flatMap(
+    ({
+      id,
+      data: { slug, title },
+    }: {
+      id: string;
+      data: { slug: Record<string, string>; title: string };
+    }) => {
+      const defaultSlug = slug["Default"];
+
+      return Object.entries(slug).map(
+        ([builderioLocale, url]: [string, string]) => {
+          const urlLang = builderioToUrlLanguageMapping[builderioLocale];
+
+          if (!urlLang) {
+            console.warn(
+              `No language mapping found for Builder.io locale "${builderioLocale}". Skipping page with slug "${url}".`,
+            );
+            return null;
+          }
+
+          const hasCustomSlug = url.trim().length > 0;
+
+          return {
+            params: {
+              lang: urlLang,
+              slug: hasCustomSlug ? url : defaultSlug,
+            },
+            props: { title, id, contentLang: builderioLocale },
+          };
+        },
+      );
+    },
+  );
+
+  console.log("paths", paths);
+
+  return paths.filter(Boolean);
+}
+
+const { title, id, builderioLocale } = Astro.props;
+---
+
+<Layout title={title}>
+  <BuilderioPage client:load id={id} builderioLocale={builderioLocale} />
+</Layout>
