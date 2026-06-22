@@ -12,7 +12,6 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^10.1.4",
     "@astrojs/react": "^5.0.7",
     "@builder.io/react": "^9.4.0",
     "@builder.io/sdk-react": "^5.2.3",
