@@ -1,0 +1,27 @@
+---
+export const prerender = false;
+
+import { fetchOneEntry, isPreviewing } from "@builder.io/sdk-react";
+import BuilderioPage from "../components/BuilderioPage";
+import Layout from "../layouts/Layout.astro";
+
+const builderModel = import.meta.env.BUILDER_PAGE_MODEL ?? "page";
+const builderAPIpublicKey = import.meta.env.BUILDER_API_PUBLIC_KEY;
+
+const urlPath = Astro.url.pathname || "/";
+
+const content = await fetchOneEntry({
+  model: builderModel,
+  apiKey: builderAPIpublicKey,
+  userAttributes: { urlPath },
+  includeUnpublished: isPreviewing(Astro.url.href),
+});
+
+if (!content && !isPreviewing(Astro.url.href)) {
+  Astro.response.status = 404;
+}
+---
+
+<Layout title={content?.data?.title ?? "Page"}>
+  <BuilderioPage client:load content={content} model={builderModel} />
+</Layout>
