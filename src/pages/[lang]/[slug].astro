@@ -1,6 +1,10 @@
 ---
+import { fetchOneEntry } from "@builder.io/sdk-react";
 import BuilderioPage from "../../components/BuilderioPage";
 import Layout from "../../layouts/Layout.astro";
+
+const builderModel = import.meta.env.BUILDER_PAGE_MODEL ?? "page";
+const builderAPIpublicKey = import.meta.env.BUILDER_API_PUBLIC_KEY;
 
 export async function getStaticPaths() {
   const builderModel = import.meta.env.BUILDER_PAGE_MODEL;
@@ -55,7 +59,7 @@ export async function getStaticPaths() {
               lang: urlLang,
               slug: hasCustomSlug ? url : defaultSlug,
             },
-            props: { title, id, contentLang: builderioLocale },
+            props: { title, id, builderioLocale },
           };
         },
       );
@@ -68,8 +72,15 @@ export async function getStaticPaths() {
 }
 
 const { title, id, builderioLocale } = Astro.props;
+
+const content = await fetchOneEntry({
+  model: builderModel,
+  apiKey: builderAPIpublicKey,
+  query: { id },
+  locale: builderioLocale,
+});
 ---
 
 <Layout title={title}>
-  <BuilderioPage client:load id={id} builderioLocale={builderioLocale} />
+  <BuilderioPage client:load content={content} model={builderModel} />
 </Layout>

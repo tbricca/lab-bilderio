@@ -4,27 +4,36 @@ import { customComponents } from './builderio-custom-components';
 
 const builderAPIpublicKey = "695b5927986f48709c8c9f221b055aa4";
 
-function BuilderioPage({ id, builderioLocale }: { id: string; builderioLocale: string }) {
-  const [content, setContent] = useState<BuilderContent | null>(null);
+type BuilderioPageProps = {
+  content?: BuilderContent | null;
+  model?: string;
+  resolveByPath?: boolean;
+};
+
+function BuilderioPage({ content: initialContent = null, model = 'page', resolveByPath = false }: BuilderioPageProps) {
+  const [content, setContent] = useState<BuilderContent | null>(initialContent);
+  const [resolved, setResolved] = useState(!resolveByPath);
 
   useEffect(() => {
+    if (!resolveByPath) return;
+
     fetchOneEntry({
-      model: 'page',
+      model,
       apiKey: builderAPIpublicKey,
-      query: {
-        id,
-      },
-      locale: builderioLocale,
-    }).then((content) => {
-      console.log('Fetched content:', content);
-      setContent(content);
+      userAttributes: { urlPath: window.location.pathname },
+      includeUnpublished: isPreviewing(window.location.search),
+    }).then((fetched) => {
+      setContent(fetched);
+      setResolved(true);
     });
-  }, []);
+  }, [resolveByPath, model]);
+
+  if (!resolved) return null;
 
   const shouldRenderBuilderContent = content ?? isPreviewing();
 
   return shouldRenderBuilderContent ? (
-    <Content content={content} model="page" apiKey={builderAPIpublicKey} customComponents={customComponents} />
+    <Content content={content} model={model} apiKey={builderAPIpublicKey} customComponents={customComponents} />
   ) : (
     <div>Content Not Found</div>
   );

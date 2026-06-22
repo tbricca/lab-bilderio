@@ -1,0 +1,10 @@
+---
+import BuilderioPage from "../components/BuilderioPage";
+import Layout from "../layouts/Layout.astro";
+
+const builderModel = import.meta.env.BUILDER_PAGE_MODEL ?? "page";
+---
+
+<Layout title="Page">
+  <BuilderioPage client:only="react" resolveByPath model={builderModel} />
+</Layout>

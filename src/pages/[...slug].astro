@@ -1,0 +1,52 @@
+---
+import { fetchOneEntry } from "@builder.io/sdk-react";
+import BuilderioPage from "../components/BuilderioPage";
+import Layout from "../layouts/Layout.astro";
+
+const builderModel = import.meta.env.BUILDER_PAGE_MODEL ?? "page";
+const builderAPIpublicKey = import.meta.env.BUILDER_API_PUBLIC_KEY;
+
+export async function getStaticPaths() {
+  const model = import.meta.env.BUILDER_PAGE_MODEL ?? "page";
+  const apiKey = import.meta.env.BUILDER_API_PUBLIC_KEY;
+
+  const contentFetchUrl = `https://cdn.builder.io/api/v3/content/${model}?${new URLSearchParams(
+    {
+      apiKey,
+      fields: ["id", "data.slug", "data.title"].join(","),
+      cachebust: "true",
+    },
+  ).toString()}`;
+
+  const { results: pages = [] } = await fetch(contentFetchUrl)
+    .then((res) => res.json())
+    .catch((error) => {
+      console.error("Error fetching pages from Builder.io:", error);
+      return { results: [] };
+    });
+
+  return pages
+    .map(({ id, data: { slug, title } }) => {
+      const path = slug?.["Default"];
+      if (!path) return null;
+
+      return {
+        params: { slug: path.replace(/^\/+/, "") },
+        props: { id, title },
+      };
+    })
+    .filter(Boolean);
+}
+
+const { id, title } = Astro.props;
+
+const content = await fetchOneEntry({
+  model: builderModel,
+  apiKey: builderAPIpublicKey,
+  query: { id },
+});
+---
+
+<Layout title={title}>
+  <BuilderioPage client:load content={content} model={builderModel} />
+</Layout>
