@@ -7,7 +7,7 @@ const builderModel = import.meta.env.BUILDER_PAGE_MODEL ?? "page";
 const builderAPIpublicKey = import.meta.env.BUILDER_API_PUBLIC_KEY;
 
 export async function getStaticPaths() {
-  const builderModel = import.meta.env.BUILDER_PAGE_MODEL;
+  const builderModel = import.meta.env.BUILDER_PAGE_MODEL ?? "page";
   const builderAPIpublicKey = import.meta.env.BUILDER_API_PUBLIC_KEY;
 
   const builderioToUrlLanguageMapping: Record<string, string> = {
@@ -24,7 +24,7 @@ export async function getStaticPaths() {
     },
   ).toString()}`;
 
-  const { results: pages } = await fetch(contentFetchUrl)
+  const { results: pages = [] } = await fetch(contentFetchUrl)
     .then((res) => res.json())
     .catch((error) => {
       console.error("Error fetching pages from Builder.io:", error);
