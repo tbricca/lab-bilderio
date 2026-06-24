@@ -8,9 +8,10 @@ type BuilderioPageProps = {
   content?: BuilderContent | null;
   model?: string;
   resolveByPath?: boolean;
+  locale?: string;
 };
 
-function BuilderioPage({ content: initialContent = null, model = 'page', resolveByPath = false }: BuilderioPageProps) {
+function BuilderioPage({ content: initialContent = null, model = 'page', resolveByPath = false, locale }: BuilderioPageProps) {
   const [content, setContent] = useState<BuilderContent | null>(initialContent);
   const [resolved, setResolved] = useState(!resolveByPath);
 
@@ -33,7 +34,7 @@ function BuilderioPage({ content: initialContent = null, model = 'page', resolve
   const shouldRenderBuilderContent = content ?? isPreviewing();
 
   return shouldRenderBuilderContent ? (
-    <Content content={content} model={model} apiKey={builderAPIpublicKey} customComponents={customComponents} />
+    <Content content={content} model={model} apiKey={builderAPIpublicKey} customComponents={customComponents} locale={locale} />
   ) : (
     <div>Content Not Found</div>
   );
